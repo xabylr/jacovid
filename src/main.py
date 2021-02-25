@@ -58,8 +58,8 @@ def error(update, context):
 def main():
     """Start the bot."""
 
-    TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
-    APP_NAME = os.getenv('APP_NAME')
+    TOKEN = os.getenv('TOKEN')
+    APP_URL = os.getenv('APP_URL')
 
     # Port is given by Heroku
     PORT = int(os.environ.get('PORT', '8443'))
@@ -88,14 +88,11 @@ def main():
     
     updater.start_webhook(listen="0.0.0.0",
                           port=PORT,
-                          url_path=TOKEN
-                          #webhook_url=f'https://{APP_NAME}:{PORT}/{TOKEN}',
+                          url_path=TOKEN,
+                          webhook_url=f'{APP_URL}{TOKEN}'
                           #key='private.key',
                           #cert='cert.pem'
                           )
-    
-    # Only use it for heroku or another proxies 
-    updater.bot.set_webhook(f'https://{APP_NAME}/{TOKEN}')
 
     # Run the bot until you press Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT. This should be used most of the time, since
