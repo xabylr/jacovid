@@ -139,3 +139,7 @@ cython_debug/
 
 # Visual studio code
 .vscode
+
+#private keys and certs
+cert.pem
+private.key

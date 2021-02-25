@@ -17,6 +17,7 @@ bot.
 
 import os
 import logging
+import environment
 
 import web_scrapper
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
@@ -58,6 +59,8 @@ def error(update, context):
 def main():
     """Start the bot."""
 
+    USE_PROXY = environment.get_bool('USE_PROXY')
+    USE_WEBHOOKS = environment.get_bool('USE_WEBHOOKS', True)
     TOKEN = os.getenv('TOKEN')
     APP_URL = os.getenv('APP_URL')
 
@@ -84,16 +87,30 @@ def main():
     dp.add_error_handler(error)
 
     # Start the Bot
-    #updater.start_polling()
-    
-    updater.start_webhook(listen="0.0.0.0",
-                          port=PORT,
-                          url_path=TOKEN,
-                          webhook_url=f'{APP_URL}{TOKEN}'
-                          #key='private.key',
-                          #cert='cert.pem'
-                          )
+    if USE_WEBHOOKS:
+        parameters = { 
+            "listen": "0.0.0.0",
+            "port": PORT,
+            "url_path": TOKEN
+        }
 
+        if USE_PROXY:
+            updater.start_webhook(**parameters)
+            updater.bot.set_webhook(f'{APP_URL}{TOKEN}')
+
+        else:
+            updater.start_webhook(
+                **parameters,
+                webhook_url=f'{APP_URL}{TOKEN}',
+                key='private.key',
+                cert='cert.pem'
+            )
+        
+
+    else:
+        updater.start_polling()
+
+    
     # Run the bot until you press Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT. This should be used most of the time, since
     # start_polling() is non-blocking and will stop the bot gracefully.
