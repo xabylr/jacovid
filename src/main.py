@@ -15,11 +15,12 @@ Press Ctrl-C on the command line or send a signal to the process to stop the
 bot.
 """
 
-import os
 import logging
+import os
+
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 
 import web_scrapper
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -37,6 +38,7 @@ def start(update, context):
 def help(update, context):
     """Send a message when the command /help is issued."""
     update.message.reply_text('Help!')
+
 
 def casos(update, context):
     """Send a message when the command /incidencia is issued."""
@@ -84,16 +86,16 @@ def main():
     dp.add_error_handler(error)
 
     # Start the Bot
-    #updater.start_polling()
-    
+    # updater.start_polling()
+
     updater.start_webhook(listen="0.0.0.0",
                           port=PORT,
                           url_path=TOKEN
-                          #webhook_url=f'https://{APP_NAME}:{PORT}/{TOKEN}',
-                          #key='private.key',
-                          #cert='cert.pem'
+                          # webhook_url=f'https://{APP_NAME}:{PORT}/{TOKEN}',
+                          # key='private.key',
+                          # cert='cert.pem'
                           )
-    
+
     # Only use it for heroku or another proxies 
     updater.bot.set_webhook(f'https://{APP_NAME}/{TOKEN}')
 
