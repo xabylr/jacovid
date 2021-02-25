@@ -15,12 +15,12 @@ Press Ctrl-C on the command line or send a signal to the process to stop the
 bot.
 """
 
-import os
 import logging
-import environment
+import os
+
+from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 
 import web_scrapper
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 
 # Enable logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -38,6 +38,7 @@ def start(update, context):
 def help(update, context):
     """Send a message when the command /help is issued."""
     update.message.reply_text('Help!')
+
 
 def casos(update, context):
     """Send a message when the command /incidencia is issued."""
@@ -59,10 +60,8 @@ def error(update, context):
 def main():
     """Start the bot."""
 
-    USE_PROXY = environment.get_bool('USE_PROXY')
-    USE_WEBHOOKS = environment.get_bool('USE_WEBHOOKS', True)
-    TOKEN = os.getenv('TOKEN')
-    APP_URL = os.getenv('APP_URL')
+    TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+    APP_NAME = os.getenv('APP_NAME')
 
     # Port is given by Heroku
     PORT = int(os.environ.get('PORT', '8443'))
@@ -87,30 +86,19 @@ def main():
     dp.add_error_handler(error)
 
     # Start the Bot
-    if USE_WEBHOOKS:
-        parameters = { 
-            "listen": "0.0.0.0",
-            "port": PORT,
-            "url_path": TOKEN
-        }
+    # updater.start_polling()
 
-        if USE_PROXY:
-            updater.start_webhook(**parameters)
-            updater.bot.set_webhook(f'{APP_URL}{TOKEN}')
+    updater.start_webhook(listen="0.0.0.0",
+                          port=PORT,
+                          url_path=TOKEN
+                          # webhook_url=f'https://{APP_NAME}:{PORT}/{TOKEN}',
+                          # key='private.key',
+                          # cert='cert.pem'
+                          )
 
-        else:
-            updater.start_webhook(
-                **parameters,
-                webhook_url=f'{APP_URL}{TOKEN}',
-                key='private.key',
-                cert='cert.pem'
-            )
-        
+    # Only use it for heroku or another proxies 
+    updater.bot.set_webhook(f'https://{APP_NAME}/{TOKEN}')
 
-    else:
-        updater.start_polling()
-
-    
     # Run the bot until you press Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT. This should be used most of the time, since
     # start_polling() is non-blocking and will stop the bot gracefully.
