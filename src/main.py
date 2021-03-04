@@ -14,6 +14,7 @@ TOKEN = os.getenv('TOKEN')
 APP_URL = os.getenv('APP_URL')
 DB_URL = os.environ.get('DB_URL', f'sqlite:///test.db')
 PORT = int(os.environ.get('PORT', '8443'))  # Port is given by Heroku
+DEBUG = environment.get_bool('DEBUG', False)
 
 
 def main():
@@ -53,5 +54,5 @@ def main():
 
 
 if __name__ == '__main__':
-    init_db(DB_URL)
+    init_db(DB_URL, DEBUG)
     main()

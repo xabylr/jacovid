@@ -2,10 +2,9 @@ from sqlalchemy import Column, Integer
 
 from models import Base
 
+class User(Base):
+    __tablename__ = 'user'
 
-class Moto(Base):
-    __tablename__ = 'motos'
-
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True) #Telegram user id
     # marca = Column(String)
     # modelo = Column(String)
