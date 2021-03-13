@@ -1,26 +1,14 @@
 #!/usr/bin/env python
-
-import os
-
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 
-import environment
-import handlers
-from models import init_db
-
-USE_PROXY = environment.get_bool('USE_PROXY')
-USE_WEBHOOKS = environment.get_bool('USE_WEBHOOKS', True)
-TOKEN = os.getenv('TOKEN')
-APP_URL = os.getenv('APP_URL')
-DB_URL = os.environ.get('DB_URL', f'sqlite:///test.db')
-PORT = int(os.environ.get('PORT', '8443'))  # Port is given by Heroku
-DEBUG = environment.get_bool('DEBUG', False)
+import config.environment as env
+import bot.handlers as handlers
 
 
-def main():
-    """Start the bot."""
+def start_bot():
+    """Start the bot"""
 
-    updater = Updater(TOKEN)
+    updater = Updater(env.TOKEN)
 
     dp = updater.dispatcher
     dp.add_handler(CommandHandler("start", handlers.start))
@@ -29,21 +17,21 @@ def main():
     dp.add_handler(MessageHandler(Filters.text, handlers.echo))
     dp.add_error_handler(handlers.error)
 
-    # Start the Bot
-    if USE_WEBHOOKS:
+    # Decide whether to use webhooks or polling
+    if env.USE_WEBHOOKS:
         parameters = {
             "listen": "0.0.0.0",
-            "port": PORT,
-            "url_path": TOKEN
+            "port": env.PORT,
+            "url_path": env.TOKEN
         }
 
-        if USE_PROXY:
+        if env.USE_PROXY:
             updater.start_webhook(**parameters)
-            updater.bot.set_webhook(f'{APP_URL}{TOKEN}')
+            updater.bot.set_webhook(f'{env.APP_URL}{env.TOKEN}')
         else:
             updater.start_webhook(
                 **parameters,
-                webhook_url=f'{APP_URL}{TOKEN}',
+                webhook_url=f'{env.APP_URL}{env.TOKEN}',
                 key='private.key',
                 cert='cert.pem'
             )
@@ -54,5 +42,4 @@ def main():
 
 
 if __name__ == '__main__':
-    init_db(DB_URL, DEBUG)
-    main()
+    start_bot()

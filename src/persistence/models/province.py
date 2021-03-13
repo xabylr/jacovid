@@ -1,9 +1,10 @@
 from sqlalchemy import Column, Integer, String
 
-from models import Base
+from persistence.models import Base
 
-class Municipality(Base):
-    __tablename__ = 'municipality'
+
+class Province(Base):
+    __tablename__ = 'province'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     code = Column(String, unique=True)
