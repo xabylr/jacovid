@@ -14,8 +14,8 @@ def populate_places(insert_measures=True):
        It will also add insert the first measures for those places if parameter set to True.
     """
 
-    measures_list_json = source.get_measures_json()
-    places_list = source.get_places(measures_list_json)
+    measures_json_lists = source.get_measures_json_list()
+    places_list = source.get_places(measures_json_lists)
 
     session = database.get_session()
 
@@ -25,15 +25,15 @@ def populate_places(insert_measures=True):
     session.close()
     
     if insert_measures:
-        pull_measures(measures_list_json)
+        pull_measures(measures_json_lists)
 
     
 
-def pull_measures(measures_json=None, date=date.today()):
+def pull_measures(measures_json_list=None, date=date.today()):
     """It will use the specified JSON or query it to the API for inserting measures
     for the selected datetime"""
 
-    received_measures_list = source.get_measures(measures_json)
+    received_measures_list = source.get_measures(measures_json_list)
     received_measures_list_comp = {MeasuresCodeComparator(i) for i in received_measures_list}
     #logger.info("Received lenght: "+str(len(received_measures_list_comp)))
 

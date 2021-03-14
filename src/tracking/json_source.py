@@ -1,116 +1,104 @@
 import requests
-from persistence.models.community import Community
-from persistence.models.province import Province
-from persistence.models.district import District
-from persistence.models.municipality import Municipality
+from persistence.models.place import Place
 from persistence.models.measures import Measures
+from tracking.json_config import urls_config as urls_config
+
+import logging
+
+logger = logging.getLogger()
 
 
-json_measures_url = 'https://www.juntadeandalucia.es/institutodeestadisticaycartografia/intranet/admin/rest/v1.0/consulta/42798'
+def get_measures_json_list():
+    measures_list = []
 
-def _get_code_table_and_col(codes):
-    if len(codes) == 1: # Community
-        code = codes[0]
-        table = Community
-        col = 'community_code'
+    for config in urls_config.values():
+        measures = None
+        while measures is None:
+            try:
+                measures = requests.get(config["url"], verify=True).json()
+                measures_list.append(measures)
+                #logger.info("Measures retrieved successfully")
+            except:
+                logger.warning("Error retrieving JSON, trying again...")
 
-    elif len(codes) == 2: # Province
-        code = codes[1]
-        table = Province
-        col = 'province_code'
+    return measures_list
 
-    elif len(codes) == 3: # District
-        code = codes[2]
-        table = District
-        col = 'district_code'
-
-    elif len(codes) == 4: # Municipality
-        code = codes[3]
-        table = Municipality
-        col = 'municipality_code'
-
-    return code, table, col
-
-def get_measures_json():
-    return requests.get(json_measures_url, verify=True).json()
-
-
-def get_places(measures_json=None):
+def get_places(json_list=None):
     """ Requests or receives a JSON measures list and returns a list of database entries
         according to the place (Community, Province, District, Municipality)
     """
     places_list = []
 
-    if measures_json is None:
-        measures_json = get_measures_json()
+    if json_list is None:
+        json_list = get_measures_json_list()
 
-    for measures in measures_json["data"]:
-        name = measures[0]["des"]
-        codes = measures[0]["cod"]
+    for measures_json in json_list: # List of JSON
+        json_id = measures_json["metainfo"]["id"]
+        config = urls_config[json_id]
 
-        code, table, _ = _get_code_table_and_col(codes)
+        for entry in measures_json["data"]: # List of entries in a JSON
+            codes = entry[0]["cod"]
+            code_idx = len(codes)-1
+            code = codes[code_idx]
+            place = config["places"][code_idx]
+            type = place["type"]
 
-        # Create and add the place in the corresponding table
-        places_list.append(table(code=code, name=name))
+            if place["register_place"]:
+                name = entry[0]["des"]
+                parent_code = None
+                parent_type = None
+                if code_idx > 0:
+                    parent_code = codes[code_idx -1]
+                    parent_type = config["places"][code_idx -1]["type"]
+
+                entity = Place(code=code, type=type,
+                     parent=parent_code, parent_type=parent_type, name=name)
+
+                places_list.append(entity)
 
     return places_list
 
-def get_measures(measures_json=None):
+def get_measures(json_list=None):
     """ Requests or receives a JSON measures list and returns a list
         of database Measures
     """
-    measure_list = []
+    measures_list = []
 
-    if measures_json == None:
-        measures_json = get_measures_json()
+    if json_list is None:
+        json_list = get_measures_json_list()
 
-    measure_indexes = measures_json["measures"]
-        
-    for measure_idx in measure_indexes:
-        if measure_idx["id"] == 276104:
-            population_idx = int(measure_idx["order"])
+    for measures_json in json_list: # List of JSON
+        json_id = measures_json["metainfo"]["id"]
+        config = urls_config[json_id]
 
-        elif measure_idx["id"] == 242502:
-            pdia_confirmed_idx = int(measure_idx["order"])
+        measure_types = measures_json["measures"]
 
-        elif measure_idx["id"] == 242528:
-            pdia_rate_idx = int(measure_idx["order"])
+        measures_idx = {}
+        for measure_type in measure_types: # List of measure config for a JSON
+            try:
+                measure_name = config["measures"][measure_type["id"]]
+                measures_idx[measure_name] = measure_type["order"]
+            except:
+                pass # There are discarded measures that are not used everywhere
 
-        elif measure_idx["id"] == 242503:
-            pdia_14d_confirmed_idx = int(measure_idx["order"])
+        for measures_entry in measures_json["data"]: # List of data entries in a JSON
+            codes = measures_entry[0]["cod"]
+            code_idx = len(codes)-1
+            code = codes[code_idx]
+            place = config["places"][code_idx]
+            type = place["type"]
+            
+            if place["register_measures"]:
+                measures_dict = {}
+                for measure, idx in measures_idx.items():
+                    value = measures_entry[idx+1]["val"]
+                    if value == "":
+                        value = None
+                    measures_dict[measure] = value
 
-        elif measure_idx["id"] == 242529:
-            pdia_14d_rate_idx = int(measure_idx["order"])
+                entity = Measures(place_code = code, place_type=type, **measures_dict)
 
-        elif measure_idx["id"] == 242504:
-            pdia_7d_confirmed_idx = int(measure_idx["order"])
-        
-        elif measure_idx["id"] == 242530:
-            pdia_7d_rate_idx = int(measure_idx["order"])
+                measures_list.append(entity)
 
-        elif measure_idx["id"] == 242505:
-            total_confirmed_idx = int(measure_idx["order"])
-
-        elif measure_idx["id"] == 242531:
-            total_rate_idx = int(measure_idx["order"])
-
-        elif measure_idx["id"] == 242506:
-            cured_idx = int(measure_idx["order"])
-
-        elif measure_idx["id"] == 242507:
-            deceased_idx = int(measure_idx["order"])
-
-
-    for measures in measures_json["data"]:
-        code, _, fk_col = _get_code_table_and_col(measures[0]["cod"])
-        columns = {}
-
-        columns[fk_col] = code
-        columns["pdia_14d_rate"] = measures[pdia_14d_rate_idx+1]["val"] or None
-
-        #TODO add all columns
-
-        measure_list.append(Measures(**columns))
-    
-    return measure_list
+    return measures_list
 

@@ -1,5 +1,5 @@
 from persistence.models.measures import Measures
-from persistence.models.municipality import Municipality
+from persistence.models.place import Place
 
 
 import persistence.database as database
@@ -7,7 +7,7 @@ import persistence.database as database
 def is_database_empty():
     session = database.get_session()
 
-    is_empty = session.query(Municipality).first() == None
+    is_empty = session.query(Place).first() == None
 
     session.close()
 
