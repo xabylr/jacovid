@@ -23,7 +23,9 @@ def connect(db_url, debug=False):
         "schema_translate_map": {None: env.PG_SCHEMA}
     }
 
-    engine = create_engine(db_url, echo=debug, connect_args=conn_args,
+    engine = create_engine(url=db_url,
+                           echo=debug,
+                           connect_args=conn_args,
                            execution_options=execution_options)
 
     # Database schema generation for missing tables
