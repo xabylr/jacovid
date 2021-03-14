@@ -1,6 +1,7 @@
 import logging
 
 from persistence import database
+from persistence.models.measures import Measures
 
 logger = logging.getLogger()
 
@@ -19,13 +20,20 @@ def help(update, context):
 
 def casos(update, context):
     """Send a message when the command /casos is issued."""
-    # session = get_session()
+    session = database.get_session()
     # moto = session.query(Moto).filter_by(id=1).one()
 
-    update.message.reply_text(
-        f'''Casos por 100.000 habitantes acumulados en 14 días:
-            {web_scrapper.get_malaga_pdia_14d()}''')
+    pdia_14d_malaga = session.query(Measures).filter_by(
+            place_code = '29067', place_type = 'M'
+            ).order_by(Measures.date_reg.desc()).first().pdia_14d_rate
 
+    logger.info("PDIA 14d "+str(pdia_14d_malaga))
+
+    update.message.reply_text(
+        f'''Casos por 100.000 habitantes acumulados en 14 días en Málaga capital:
+            {str(pdia_14d_malaga)}''')
+
+    session.close()
 
 def echo(update, context):
     """Echo the user message."""

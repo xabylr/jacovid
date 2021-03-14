@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
-
+import persistence.database as db
 import config.environment as env
 import bot.handlers as handlers
 
 
 def start_bot():
     """Start the bot"""
+
+    db.connect(env.DB_URL, env.DEBUG)
 
     updater = Updater(env.TOKEN)
 
