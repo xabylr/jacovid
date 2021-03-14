@@ -1,18 +1,18 @@
-from persistence.models import Base
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+
+from persistence.models import Base
 
 engine = None
 Session = None
 
+
 def get_session():
     # Create a new session using the constructor
-    return Session()
+    return Session(bind=engine)
 
 
 def connect(db_url, debug=False):
-    global engine, Session
+    global engine
 
     # Create the engine
     conn_args = {}
@@ -23,6 +23,3 @@ def connect(db_url, debug=False):
 
     # Database schema generation for missing tables
     Base.metadata.create_all(engine)
-
-    # Create a session constructor
-    Session = sessionmaker(bind=engine)
