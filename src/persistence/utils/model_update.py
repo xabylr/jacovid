@@ -13,5 +13,4 @@ def update_measures_model(existing, new):
     existing.cured = new.cured
     existing.deceased = new.deceased
 
-    existing.date_reg = date.today()
     existing.dt_mod = datetime.now()
