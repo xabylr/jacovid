@@ -1,4 +1,5 @@
 from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
 import config.environment as env
 from persistence.models import Base
@@ -9,11 +10,11 @@ Session = None
 
 def get_session():
     # Create a new session using the constructor
-    return Session(bind=engine)
+    return Session()
 
 
 def connect(db_url, debug=False):
-    global engine
+    global engine, Session
 
     # Create the engine
     conn_args = {}
@@ -23,10 +24,12 @@ def connect(db_url, debug=False):
         "schema_translate_map": {None: env.PG_SCHEMA}
     }
 
-    engine = create_engine(url=db_url,
+    engine = create_engine(db_url,
                            echo=debug,
                            connect_args=conn_args,
                            execution_options=execution_options)
+
+    Session = sessionmaker(bind=engine)
 
     # Database schema generation for missing tables
     Base.metadata.create_all(engine)
