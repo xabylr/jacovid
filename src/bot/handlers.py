@@ -5,12 +5,21 @@ from telegram.ext import Updater, CallbackContext
 
 from persistence import database
 from persistence.models import Measures, Place
+from sqlalchemy import and_
 
 logger = logging.getLogger()
 
 
+
 def start(update: Updater, context: CallbackContext) -> None:
     """Send a message when the command /start is issued."""
+
+    welcome_message = f'''Escribe un nombre de un municipio para comprobar su información actualizada.
+Fuente de los datos: https://www.juntadeandalucia.es/institutodeestadisticaycartografia/salud/static/index.html5'''
+
+    update.message.reply_text(welcome_message)
+
+def prueba_botones(update: Updater, context: CallbackContext) -> None:
     kb = [[KeyboardButton("Option 1")],
           [KeyboardButton("Option 2")]]
     kb_markup = ReplyKeyboardMarkup(kb,
@@ -63,7 +72,7 @@ def casos(update, context):
 
     update.message.reply_text(
         f'''Casos por 100.000 habitantes acumulados en 14 días en Málaga capital:
-            {str(pdia_14d_malaga)}''')
+{str(pdia_14d_malaga)}''')
 
     session.close()
 
@@ -72,18 +81,28 @@ def search(update, context):
     session = database.get_session()
     usertext = "%"+update.message.text+"%"
 
-    response = "No se ha encontrado la ubicación"
+    response = "No se ha encontrado el municipio"
 
-    found_place = session.query(Place).filter(Place.name.ilike(usertext)).first()
+    found_places = session.query(Place).filter(and_(Place.name.ilike(usertext), Place.type=="M" ) ).all()
 
-    if found_place:
-        name = found_place.name
-        pdia_14d= session.query(Measures).filter_by(
-            place_code = found_place.code, place_type = found_place.type
-            ).order_by(Measures.date_reg.desc()).first().pdia_14d_rate
+    if len(found_places) > 0:
+        if len(found_places) == 0:
+            response = 'No se ha encontrado ningún municipio coincidente con la búsqueda'
+        if len(found_places ) == 1:
+            place = found_places[0]
+            name = place.name
+            pdia_14d= session.query(Measures).filter_by(
+                place_code = place.code, place_type = place.type
+                ).order_by(Measures.date_reg.desc()).first().pdia_14d_rate
 
-        response =  f'''Casos por 100.000 habitantes acumulados en 14 días en {name}:
-            {str(pdia_14d)}'''
+            response =  f'''Casos por 100.000 habitantes acumulados en 14 días en {name}:
+{str(pdia_14d)}'''
+        elif len(found_places) < 50:
+            response = 'Varias coincidencias, por favor escribe un nombre más largo.\n'
+            for place in found_places:
+                response+= f'''- {place.name}\n'''
+        else:
+            response = f'''Se han encontrado {len(found_places)} lugares coincidentes, por favor escribe un nombre más largo.'''
 
     update.message.reply_text(response)
 
