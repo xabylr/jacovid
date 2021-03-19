@@ -13,8 +13,11 @@ def get_session():
     return Session()
 
 
-def connect(db_url, debug=False):
+def connect(debug=False):
     global engine, Session
+
+    db_url = env.DATABASE_URL;
+    debug = env.DEBUG;
 
     # Create the engine
     conn_args = {}

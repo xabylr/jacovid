@@ -1,15 +1,47 @@
 import logging
 
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, KeyboardButton, ReplyKeyboardMarkup
+from telegram.ext import Updater, CallbackContext
+
 from persistence import database
 from persistence.models.measures import Measures
 
 logger = logging.getLogger()
 
 
-def start(update, context):
+def start(update: Updater, context: CallbackContext) -> None:
     """Send a message when the command /start is issued."""
+    kb = [[KeyboardButton("Option 1")],
+          [KeyboardButton("Option 2")]]
+    kb_markup = ReplyKeyboardMarkup(kb,
+                                    resize_keyboard=True,
+                                    one_time_keyboard=True)
 
-    update.message.reply_text('Hi!')
+    update.message.edit_reply_markup(kb_markup)
+
+
+    update.message.reply_text('¡Hola!')
+
+    keyboard = [
+        [
+            InlineKeyboardButton("Option 1", callback_data='1'),
+            InlineKeyboardButton("Option 2", callback_data='2'),
+        ],
+        [InlineKeyboardButton("Option 3", callback_data='3')],
+    ]
+
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    update.message.reply_text('Please choose:', reply_markup=[kb_markup, reply_markup])
+
+def button(update: Update, _: CallbackContext) -> None:
+    query = update.callback_query
+
+    # CallbackQueries need to be answered, even if no notification to the user is needed
+    # Some clients may have trouble otherwise. See https://core.telegram.org/bots/api#callbackquery
+    query.answer()
+
+    query.edit_message_text(text=f"Selected option: {query.data}")
 
 
 def help(update, context):

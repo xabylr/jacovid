@@ -1,19 +1,24 @@
 #!/usr/bin/env python
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
+from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters
 import persistence.database as db
 import config.environment as env
 import bot.handlers as handlers
+import logging
+
+logging.basicConfig(format='%(asctime)s- %(levelname)s - %(message)s',
+                    level=logging.INFO)
 
 
 def start_bot():
     """Start the bot"""
 
-    db.connect(env.DB_URL, env.DEBUG)
+    db.connect()
 
     updater = Updater(env.TOKEN)
 
     dp = updater.dispatcher
     dp.add_handler(CommandHandler("start", handlers.start))
+    dp.add_handler(CallbackQueryHandler(handlers.button))
     dp.add_handler(CommandHandler("help", handlers.help))
     dp.add_handler(CommandHandler("casos", handlers.casos))
     dp.add_handler(MessageHandler(Filters.text, handlers.echo))
