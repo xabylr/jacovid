@@ -4,7 +4,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update, Keyboar
 from telegram.ext import Updater, CallbackContext
 
 from persistence import database
-from persistence.models.measures import Measures
+from persistence.models import Measures, Place
 
 logger = logging.getLogger()
 
@@ -67,10 +67,25 @@ def casos(update, context):
 
     session.close()
 
-def echo(update, context):
-    """Echo the user message."""
+def search(update, context):
+    """Search municipality."""
+    session = database.get_session()
+    usertext = "%"+update.message.text+"%"
 
-    update.message.reply_text(update.message.text)
+    response = "No se ha encontrado la ubicación"
+
+    found_place = session.query(Place).filter(Place.name.ilike(usertext)).first()
+
+    if found_place:
+        name = found_place.name
+        pdia_14d= session.query(Measures).filter_by(
+            place_code = found_place.code, place_type = found_place.type
+            ).order_by(Measures.date_reg.desc()).first().pdia_14d_rate
+
+        response =  f'''Casos por 100.000 habitantes acumulados en 14 días en {name}:
+            {str(pdia_14d)}'''
+
+    update.message.reply_text(response)
 
 
 def error(update, context):

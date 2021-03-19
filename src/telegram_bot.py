@@ -21,7 +21,7 @@ def start_bot():
     dp.add_handler(CallbackQueryHandler(handlers.button))
     dp.add_handler(CommandHandler("help", handlers.help))
     dp.add_handler(CommandHandler("casos", handlers.casos))
-    dp.add_handler(MessageHandler(Filters.text, handlers.echo))
+    dp.add_handler(MessageHandler(Filters.text, handlers.search))
     dp.add_error_handler(handlers.error)
 
     # Decide whether to use webhooks or polling
