@@ -96,7 +96,7 @@ def search(update, context):
                 ).order_by(Measures.date_reg.desc()).first().pdia_14d_rate
 
             response =  f'''Casos por 100.000 habitantes acumulados en 14 días en {name}:
-{str(pdia_14d)}'''
+{pdia_14d:.2f}'''
         elif len(found_places) < 50:
             response = 'Varias coincidencias, por favor escribe un nombre más largo.\n'
             for place in found_places:
