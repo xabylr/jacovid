@@ -143,9 +143,13 @@ cython_debug/
 #private keys and certs
 cert.pem
 private.key
+
 # PyCharm
 .idea
 
-#private keys and certs
+# private keys and certs
 cert.pem
 private.key
+
+# Databases
+*.db
