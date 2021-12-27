@@ -14,5 +14,6 @@ DATABASE_URL = os.getenv('DB_URL', os.getenv('DATABASE_URL', 'sqlite:///developm
 PG_SCHEMA = os.getenv('PG_SCHEMA', 'public')
 REDIS_URL = os.getenv('REDIS_TLS_URL', os.getenv('REDIS_URL', 'redis://localhost'))
 PORT = int(os.environ.get('PORT', '8443'))  # Port is given by Heroku
+BIND = int(os.environ.get('BIND'), '127.0.0.1')
 REFRESH_AT_STARTUP = _get_bool('REFRESH_AT_STARTUP', True)
 DEBUG = _get_bool('DEBUG', False)

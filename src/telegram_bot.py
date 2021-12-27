@@ -27,7 +27,7 @@ def start_bot():
     # Decide whether to use webhooks or polling
     if env.USE_WEBHOOKS:
         parameters = {
-            "listen": "0.0.0.0",
+            "listen": env.BIND,
             "port": env.PORT,
             "url_path": env.TOKEN
         }
