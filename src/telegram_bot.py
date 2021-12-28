@@ -29,16 +29,16 @@ def start_bot():
         parameters = {
             "listen": env.BIND,
             "port": env.PORT,
-            "url_path": env.TOKEN
+            "url_path": f'{env.PATH_URL}{env.TOKEN}'
         }
 
         if env.USE_PROXY:
             updater.start_webhook(**parameters)
-            updater.bot.set_webhook(f'{env.APP_URL}{env.TOKEN}')
+            updater.bot.set_webhook(f'{env.WEBHOOK_URL}{env.TOKEN}')
         else:
             updater.start_webhook(
                 **parameters,
-                webhook_url=f'{env.APP_URL}{env.TOKEN}',
+                webhook_url=f'{env.WEBHOOK_URL}{env.TOKEN}',
                 key='private.key',
                 cert='cert.pem'
             )
