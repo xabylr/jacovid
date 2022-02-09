@@ -68,7 +68,7 @@ def casos(update, _):
 
         logger.info("PDIA 14d " + str(pdia_14d_malaga))
 
-        update.message.reply_text(f'Casos por 100.000 habitantes acumulados en 14 días en Málaga capital:'
+        update.message.reply_text(f'Casos por 100.000 habitantes acumulados en 14 días en Málaga capital:\n'
                                   f'{str(pdia_14d_malaga)}')
 
 
@@ -92,7 +92,7 @@ def search(update, _):
                 place_code=place.code, place_type=place.type
             ).order_by(Measures.date_reg.desc()).first().pdia_14d_rate
 
-            response = (f'Casos por 100.000 habitantes acumulados en 14 días en {name}:'
+            response = (f'Casos por 100.000 habitantes acumulados en 14 días en {name}:\n'
                         f'{pdia_14d:.2f}')
         elif len(found_places) < 50:
             response = 'Varias coincidencias, por favor escribe un nombre más largo.\n'
