@@ -1,7 +1,7 @@
-from sqlalchemy import Column, Integer, String, Numeric, Date, DateTime
-from sqlalchemy import UniqueConstraint, ForeignKeyConstraint, func
+from sqlalchemy import Column, Date, DateTime, ForeignKeyConstraint, Integer, Numeric, String, UniqueConstraint, func
 
-from persistence.models import Base
+from persistence.database import Base
+
 
 class Measures(Base):
     __tablename__ = 'measures'
@@ -13,7 +13,7 @@ class Measures(Base):
     # Register time from database
     date_reg = Column(Date(), server_default=func.now())
     dt_reg = Column(DateTime(), server_default=func.now())
-    dt_mod = Column(DateTime(timezone=False), onupdate=func.now())
+    dt_mod = Column(DateTime(), onupdate=func.now())
 
     population = Column(Numeric)
     pdia_confirmed = Column(Numeric)
@@ -26,15 +26,17 @@ class Measures(Base):
 
     __table_args__ = (
         UniqueConstraint('place_code', 'place_type', 'date_reg'),
-        ForeignKeyConstraint(['place_code', 'place_type'], ['place.code', 'place.type'])
+        ForeignKeyConstraint(('place_code', 'place_type'), ('place.code', 'place.type'))
     )
+
 
 class MeasuresCodeComparator:
     def __init__(self, measures):
         self.measures = measures
+
     def __eq__(self, other):
         return (self.measures.place_code == other.measures.place_code and
-                    self.measures.place_type == other.measures.place_type)
+                self.measures.place_type == other.measures.place_type)
 
     def __hash__(self):
-        return hash(self.measures.place_code)+hash(self.measures.place_type)
+        return hash(self.measures.place_code) + hash(self.measures.place_type)

@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer
 
-from persistence.models import Base
+from persistence.database import Base
 
 
 class User(Base):

@@ -1,7 +1,8 @@
 import logging
-from datetime import date, datetime
+from datetime import datetime
 
 logger = logging.getLogger()
+
 
 def update_measures_model(existing, new):
     existing.population = new.population

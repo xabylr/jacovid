@@ -1,9 +1,10 @@
-#!/usr/bin/env python
-from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters
-import persistence.database as db
-import config.environment as env
-import bot.handlers as handlers
+#!/usr/bin/environment python
 import logging
+
+from telegram.ext import CallbackQueryHandler, CommandHandler, Filters, MessageHandler, Updater
+
+from bot import handlers
+from config import environment
 
 logging.basicConfig(format='%(asctime)s- %(levelname)s - %(message)s',
                     level=logging.INFO)
@@ -12,33 +13,31 @@ logging.basicConfig(format='%(asctime)s- %(levelname)s - %(message)s',
 def start_bot():
     """Start the bot"""
 
-    db.connect()
-
-    updater = Updater(env.TOKEN)
+    updater = Updater(environment.TOKEN)
 
     dp = updater.dispatcher
-    dp.add_handler(CommandHandler("start", handlers.start))
+    dp.add_handler(CommandHandler('start', handlers.start))
     dp.add_handler(CallbackQueryHandler(handlers.button))
-    dp.add_handler(CommandHandler("help", handlers.help))
-    dp.add_handler(CommandHandler("casos", handlers.casos))
+    dp.add_handler(CommandHandler('help', handlers.help_))
+    dp.add_handler(CommandHandler('casos', handlers.casos))
     dp.add_handler(MessageHandler(Filters.text, handlers.search))
     dp.add_error_handler(handlers.error)
 
     # Decide whether to use webhooks or polling
-    if env.USE_WEBHOOKS:
+    if environment.USE_WEBHOOKS:
         parameters = {
-            "listen": env.BIND,
-            "port": env.PORT,
-            "url_path": f'{env.PATH_URL}{env.TOKEN}'
+            'listen': '0.0.0.0',
+            'port': environment.PORT,
+            'url_path': environment.TOKEN
         }
 
-        if env.USE_PROXY:
+        if environment.USE_PROXY:
             updater.start_webhook(**parameters)
-            updater.bot.set_webhook(f'{env.WEBHOOK_URL}{env.TOKEN}')
+            updater.bot.set_webhook(f'{environment.APP_URL}{environment.TOKEN}')
         else:
             updater.start_webhook(
                 **parameters,
-                webhook_url=f'{env.WEBHOOK_URL}{env.TOKEN}',
+                webhook_url=f'{environment.APP_URL}{environment.TOKEN}',
                 key='private.key',
                 cert='cert.pem'
             )
