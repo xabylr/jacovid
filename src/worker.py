@@ -2,7 +2,7 @@
 import logging
 
 import redis
-from rq import Connection, Queue, Worker
+from rq import Connection, Queue, SimpleWorker
 
 from config import environment
 from jobs import refresh_data
@@ -30,7 +30,7 @@ def start_worker():
         refresh_data.pull_measures()
 
     with Connection(conn):
-        worker = Worker(map(Queue, listen))
+        worker = SimpleWorker(map(Queue, listen))
         worker.work()
 
 
