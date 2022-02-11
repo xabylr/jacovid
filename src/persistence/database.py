@@ -9,5 +9,4 @@ Session = sessionmaker(bind=engine)
 Base = declarative_base(bind=engine)
 
 if __name__ == '__main__':
-    from models import *
     Base.metadata.create_all(engine)  # Database schema generation for missing tables

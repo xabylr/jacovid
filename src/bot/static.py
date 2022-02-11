@@ -1,5 +1,6 @@
 import logging
 
+
 from sqlalchemy import and_
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup, Update
 from telegram.ext import CallbackContext, Updater
@@ -8,6 +9,12 @@ from persistence.database import Session
 from persistence.models import Measures, Place
 
 logger = logging.getLogger()
+
+reply_keyboard = [
+    ['Añadir sitio', 'Eliminar sito'],
+    ['No, gracias'],
+]
+markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True)
 
 
 def start(update: Updater, _: CallbackContext):
@@ -18,6 +25,9 @@ def start(update: Updater, _: CallbackContext):
 
     update.message.reply_text(welcome_message)
 
+def add_place(update: Updater, _: CallbackContext):
+    update.message.reply_text(f'Has elegido {update.message.text}')
+   
 
 def prueba_botones(update: Updater, _: CallbackContext):
     kb = [
@@ -50,7 +60,7 @@ def button(update: Update, _: CallbackContext):
     query.edit_message_text(text=f"Selected option: {query.data}")
 
 
-def help_(update, _):
+def help(update, _):
     """Send a message when the command /help is issued."""
 
     update.message.reply_text('Help!')
@@ -59,7 +69,7 @@ def help_(update, _):
 def casos(update, _):
     """Send a message when the command /casos is issued."""
 
-    with (session := Session()):
+    with Session() as session:
         # moto = session.query(Moto).filter_by(id=1).one()
         pdia_14d_malaga = session.query(Measures).filter_by(
             place_code='29067',
@@ -69,39 +79,38 @@ def casos(update, _):
         logger.info("PDIA 14d " + str(pdia_14d_malaga))
 
         update.message.reply_text(f'Casos por 100.000 habitantes acumulados en 14 días en Málaga capital:\n'
-                                  f'{str(pdia_14d_malaga)}')
-
+                                f'{str(pdia_14d_malaga)}')
 
 def search(update, _):
     """Search municipality."""
 
-    session = Session()
-    usertext = "%" + update.message.text + "%"
+    with Session() as session:
+        usertext = "%" + update.message.text + "%"
 
-    response = "No se ha encontrado el municipio"
+        response = "No se ha encontrado el municipio"
 
-    found_places = session.query(Place).filter(and_(Place.name.ilike(usertext), Place.type == "M")).all()
+        found_places = session.query(Place).filter(and_(Place.name.ilike(usertext), Place.type == "M")).all()
 
-    if len(found_places) > 0:
-        if len(found_places) == 0:
-            response = 'No se ha encontrado ningún municipio coincidente con la búsqueda'
-        elif len(found_places) == 1:
-            place = found_places[0]
-            name = place.name
-            pdia_14d = session.query(Measures).filter_by(
-                place_code=place.code, place_type=place.type
-            ).order_by(Measures.date_reg.desc()).first().pdia_14d_rate
+        if len(found_places) > 0:
+            if len(found_places) == 0:
+                response = 'No se ha encontrado ningún municipio coincidente con la búsqueda'
+            elif len(found_places) == 1:
+                place = found_places[0]
+                name = place.name
+                pdia_14d = session.query(Measures).filter_by(
+                    place_code=place.code, place_type=place.type
+                ).order_by(Measures.date_reg.desc()).first().pdia_14d_rate
 
-            response = (f'Casos por 100.000 habitantes acumulados en 14 días en {name}:\n'
-                        f'{pdia_14d:.2f}')
-        elif len(found_places) < 50:
-            response = 'Varias coincidencias, por favor escribe un nombre más largo.\n'
-            for place in found_places:
-                response += f'- {place.name}\n'
-        else:
-            response = f'Se han encontrado {len(found_places)} lugares coincidentes, por favor escribe un nombre más largo.'
+                response = (f'Casos por 100.000 habitantes acumulados en 14 días en {name}:\n'
+                            f'{pdia_14d:.2f}')
+            elif len(found_places) < 50:
+                response = 'Varias coincidencias, por favor escribe un nombre más largo.\n'
+                for place in found_places:
+                    response += f'- {place.name}\n'
+            else:
+                response = f'Se han encontrado {len(found_places)} lugares coincidentes, por favor escribe un nombre más largo.'
 
-    update.message.reply_text(response)
+        update.message.reply_text(response)
 
 
 def error(update, context):
