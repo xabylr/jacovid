@@ -18,10 +18,10 @@ def start_bot():
     dp = updater.dispatcher
     dp.add_handler(places.conv_handler)
     dp.add_handler(CommandHandler('start', static.start))
+    dp.add_handler(MessageHandler(Filters.text, static.query_cases))
     dp.add_handler(CallbackQueryHandler(static.button))
     dp.add_handler(CommandHandler('help', static.help))
-    dp.add_handler(CommandHandler('casos', static.casos))
-    dp.add_handler(MessageHandler(Filters.text, static.search))
+    
     dp.add_error_handler(static.error)
 
     # Decide whether to use webhooks or polling

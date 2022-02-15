@@ -1,12 +1,12 @@
 import logging
 
-
-from sqlalchemy import and_
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup, Update
-from telegram.ext import CallbackContext, Updater
-
 from persistence.database import Session
 from persistence.models import Measures, Place
+from telegram import (InlineKeyboardButton, InlineKeyboardMarkup,
+                      KeyboardButton, ReplyKeyboardMarkup, Update)
+from telegram.ext import CallbackContext, Updater
+
+from bot import places
 
 logger = logging.getLogger()
 
@@ -25,29 +25,33 @@ def start(update: Updater, _: CallbackContext):
 
     update.message.reply_text(welcome_message)
 
+
 def add_place(update: Updater, _: CallbackContext):
     update.message.reply_text(f'Has elegido {update.message.text}')
-   
+
 
 def prueba_botones(update: Updater, _: CallbackContext):
     kb = [
         [KeyboardButton("Option 1")],
         [KeyboardButton("Option 2")]
     ]
-    kb_markup = ReplyKeyboardMarkup(kb, resize_keyboard=True, one_time_keyboard=True)
+    kb_markup = ReplyKeyboardMarkup(
+        kb, resize_keyboard=True, one_time_keyboard=True)
 
     update.message.edit_reply_markup(kb_markup)
 
     update.message.reply_text('¡Hola!')
 
     keyboard = [
-        [InlineKeyboardButton("Option 1", callback_data='1'), InlineKeyboardButton("Option 2", callback_data='2')],
+        [InlineKeyboardButton("Option 1", callback_data='1'),
+         InlineKeyboardButton("Option 2", callback_data='2')],
         [InlineKeyboardButton("Option 3", callback_data='3')],
     ]
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    update.message.reply_text('Please choose:', reply_markup=[kb_markup, reply_markup])
+    update.message.reply_text('Please choose:', reply_markup=[
+                              kb_markup, reply_markup])
 
 
 def button(update: Update, _: CallbackContext):
@@ -66,51 +70,19 @@ def help(update, _):
     update.message.reply_text('Help!')
 
 
-def casos(update, _):
-    """Send a message when the command /casos is issued."""
+def query_cases(update, context):
+    """Search cases"""
+    place = places.search_place(update, context)
 
-    with Session() as session:
-        # moto = session.query(Moto).filter_by(id=1).one()
-        pdia_14d_malaga = session.query(Measures).filter_by(
-            place_code='29067',
-            place_type='M'
-        ).order_by(Measures.date_reg.desc()).first().pdia_14d_rate
+    if(place):
+          with Session() as session:
+            # moto = session.query(Moto).filter_by(id=1).one()
+            cases = session.query(Measures).filter_by(
+                place_code=place.code,
+            ).order_by(Measures.date_reg.desc()).first()
 
-        logger.info("PDIA 14d " + str(pdia_14d_malaga))
-
-        update.message.reply_text(f'Casos por 100.000 habitantes acumulados en 14 días en Málaga capital:\n'
-                                f'{str(pdia_14d_malaga)}')
-
-def search(update, _):
-    """Search municipality."""
-
-    with Session() as session:
-        usertext = "%" + update.message.text + "%"
-
-        response = "No se ha encontrado el municipio"
-
-        found_places = session.query(Place).filter(and_(Place.name.ilike(usertext), Place.type == "M")).all()
-
-        if len(found_places) > 0:
-            if len(found_places) == 0:
-                response = 'No se ha encontrado ningún municipio coincidente con la búsqueda'
-            elif len(found_places) == 1:
-                place = found_places[0]
-                name = place.name
-                pdia_14d = session.query(Measures).filter_by(
-                    place_code=place.code, place_type=place.type
-                ).order_by(Measures.date_reg.desc()).first().pdia_14d_rate
-
-                response = (f'Casos por 100.000 habitantes acumulados en 14 días en {name}:\n'
-                            f'{pdia_14d:.2f}')
-            elif len(found_places) < 50:
-                response = 'Varias coincidencias, por favor escribe un nombre más largo.\n'
-                for place in found_places:
-                    response += f'- {place.name}\n'
-            else:
-                response = f'Se han encontrado {len(found_places)} lugares coincidentes, por favor escribe un nombre más largo.'
-
-        update.message.reply_text(response)
+            update.message.reply_text(f'Casos por 100.000 habitantes acumulados en 14 días en {place.name}:\n'
+                                    f'{str(cases.pdia_14d_rate)}')
 
 
 def error(update, context):
