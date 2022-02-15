@@ -3,7 +3,8 @@ import logging
 from persistence.database import Session
 from persistence.models import Measures, Place
 from telegram import (InlineKeyboardButton, InlineKeyboardMarkup,
-                      KeyboardButton, ReplyKeyboardMarkup, Update)
+                      KeyboardButton, ReplyKeyboardMarkup, ReplyKeyboardRemove,
+                      Update)
 from telegram.ext import CallbackContext, Updater
 
 from bot import places
@@ -82,7 +83,8 @@ def query_cases(update, context):
             ).order_by(Measures.date_reg.desc()).first()
 
             update.message.reply_text(f'Casos por 100.000 habitantes acumulados en 14 días en {place.name}:\n'
-                                    f'{str(cases.pdia_14d_rate)}')
+                                    f'{str(cases.pdia_14d_rate)}',
+                                    reply_markup=ReplyKeyboardRemove())
 
 
 def error(update, context):

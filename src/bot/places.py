@@ -7,7 +7,7 @@ from persistence.utils.bot_utils import KeyboardMap
 from sqlalchemy import and_
 from sqlalchemy.sql import func
 from sqlalchemy.sql.sqltypes import Numeric
-from telegram import ReplyKeyboardMarkup
+from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import CallbackContext, ConversationHandler, Updater
 from telegram.ext.commandhandler import CommandHandler
 from telegram.ext.filters import Filters
@@ -54,14 +54,14 @@ def choose_option(update: Updater, context: CallbackContext):
         update.message.reply_text(
             'Escribe el nombre de una Provincia, Distrito, '
             'Zona Básica de Salud o Municipio. También puedes utilizar "Andalucía" como lugar',
-            reply_markup=None
+            reply_markup=ReplyKeyboardRemove()
         )
         return State.ADD_PLACE
 
     elif answer == 'DELETE':
         update.message.reply_text(
             'Elige un municipio para borrar',
-            reply_markup=None
+            reply_markup=ReplyKeyboardRemove()
         )
         return State.REMOVE_PLACE
     else:
@@ -77,7 +77,8 @@ def add_place(update: Updater, context: CallbackContext):
     place = search_place(update, context)
 
     if (place):
-        update.message.reply_text(f'Guardando lugar con id {place.id}')
+        update.message.reply_text(f'Guardando lugar con id {place.id}', 
+                                    reply_markup=ReplyKeyboardRemove())
         return places_crud(update, context)
 
 
@@ -128,7 +129,7 @@ def search_place(update: Updater, context: CallbackContext) -> Place:
                                             )
             else: 
                 update.message.reply_text("No se ha encontrado ningún sitio :(",
-                                            reply_markup=None)
+                                            reply_markup=ReplyKeyboardRemove())
 
 
         # if len(found_places) > 0:
