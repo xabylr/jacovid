@@ -3,7 +3,7 @@ import logging
 
 from telegram.ext import CallbackQueryHandler, CommandHandler, Filters, MessageHandler, Updater
 
-from bot import static, places
+from bot import static, crud
 from config import environment
 
 logging.basicConfig(format='%(asctime)s- %(levelname)s - %(message)s',
@@ -16,11 +16,12 @@ def start_bot():
     updater = Updater(environment.TOKEN)
 
     dp = updater.dispatcher
-    dp.add_handler(places.conv_handler)
+
     dp.add_handler(CommandHandler('start', static.start))
-    dp.add_handler(MessageHandler(Filters.text, static.query_cases))
-    dp.add_handler(CallbackQueryHandler(static.button))
     dp.add_handler(CommandHandler('help', static.help))
+    dp.add_handler(CommandHandler('cases', static.cases))
+    dp.add_handler(crud.conv_handler)
+    dp.add_handler(MessageHandler(Filters.text, static.query_cases))
     
     dp.add_error_handler(static.error)
 
